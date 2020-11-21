@@ -10,12 +10,12 @@ class Posts extends Model
 {
     public $TblName = 'posts';
     public $timestamps = false;
-    function Category()
+    function categoryOfPosts()
     {
         return $this->hasmany ('App\Models\Categories','id','category_id');
     }
 
-    function Comments()
+    function commentsOfPosts()
     {
         return $this->morphMany ('App\Models\Comments','post');
     }

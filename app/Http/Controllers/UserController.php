@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\categories;
+use \App\Models\Posts;
+use \App\Models\Categories;
 use App\Models\comments;
-use App\Models\posts;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use mysql_xdevapi\Table;
 use PhpParser\Node\Stmt\Foreach_;
+use App\Repositories\UserRepository;
+use Illuminate\View\View;
+
 
 class UserController extends Controller
 {
@@ -25,29 +28,31 @@ class UserController extends Controller
 
 
 
-    public static function AllCategories()
+    public static function allCategories()
     {
-        return $categories = categories::all()->toArray ();
+        return categories::all()->toArray ();
     }
-    public static function AllPosts()
+    public static function allPosts()
     {
-        $Posts= Posts::all();
-        foreach ($Posts as $Post=>$x)
-        {
-//            oon 'where' ke too khatte paein hast ag nabashe query e  'select *' ro ejra mikone.
-            $Post= $Posts->find($x)->with('Category')->get()->toArray();
-        }
-        return $Post;
+        return Posts::with ('categoryOfPosts')->get ()->toArray ();
     }
-    public static function FindCategory($CategoryId)
+    public static function findCategory($categoryid)
     {
 //        oon 'where' ke too khatte paein hast ag nabashe query e  'select *' ro ejra mikone.
-        return $Posts= Categories::find($CategoryId)->with('Posts')->where('categories.id',$CategoryId)->get()->toArray();
+        return Categories::find($categoryid)->with('Posts')->where('categories.id',$categoryid)->get()->toArray();
     }
-    public static function FindPost($PostId)
+    public static function findPost($postid)
     {
 //        oon 'where' ke too khatte paein hast ag nabashe query e  'select *' ro ejra mikone.
-        return $Post= Posts::find($PostId)->with('Category','Comments')->where('posts.id',$PostId)->get()->toArray();
+        return Posts::find($postid)->with('categoryOfPosts','commentsOfPosts')->where('posts.id',$postid)->get()->toArray();
+    }
+    public static function postTitle($postid)
+    {
+        return Posts::all('id','title')->where ('id',$postid)->toArray();
+    }
+    public static function categoryName($categoryid)
+    {
+        return Categories::all('id','name')->where ('id',$categoryid)->toArray();
     }
 
 
@@ -55,35 +60,43 @@ class UserController extends Controller
 
     public function home()
     {
-        $Posts= $this->AllPosts ();
-        $Categories= $this->AllCategories ();
+//        $posts= $this->allPosts ();
+//        $categories= $this->allCategories ();
 
-        return view ("home",['Post' => $Posts],['Category' => $Categories]);
+        for ( $i= 0; $i <3; $i++) {
+            $posts[$i]= $this->postTitle($i+1);
+            $categories[$i]= $this->categoryName($i+1);
+        }
+
+        return view ("home",['posts' => $posts],['categories' => $categories]);
     }
+
     public function post ($PostId)
     {
-        $Post= $this->FindPost ($PostId);
+        $post= $this->findPost ($PostId);
 
-     return view ("post",['Post' => $Post]);
-
+        return view ("post",['posts' => $post]);
     }
     public function category ($CategoryId)
     {
-        $Posts= $this->FindCategory ($CategoryId);
+        $posts= $this->findCategory ($CategoryId);
 
-        return view ("category",['Posts' => $Posts]);
+        return view ("category",['posts' => $posts]);
     }
 
     public function posts ()
     {
-        $Post = $this->AllPosts ();
+        $posts = $this->AllPosts ();
 
-        return view ('posts',['post' => $Post]);
+        return view ('posts',['posts' => $posts]);
     }
     public function categories()
     {
-        $categories = $this->AllCategories ();
+        $cat = $this->AllCategories ();
+        for ( $c= 0; $c< count ($cat); $c++) {
+            $categories[] = $this->FindCategory ( $cat[$c]['id'] );
+        }
 
-        return view ('categories',['Category'=>$categories]);
+        return view ('categories',['categories'=>$categories]);
     }
 }
