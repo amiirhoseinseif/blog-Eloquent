@@ -60,15 +60,7 @@ class UserController extends Controller
 
     public function home()
     {
-//        $posts= $this->allPosts ();
-//        $categories= $this->allCategories ();
-
-        for ( $i= 0; $i <3; $i++) {
-            $posts[$i]= $this->postTitle($i+1);
-            $categories[$i]= $this->categoryName($i+1);
-        }
-
-        return view ("home",['posts' => $posts],['categories' => $categories]);
+        return view ("home");
     }
 
     public function post ($PostId)
